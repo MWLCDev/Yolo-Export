@@ -1,0 +1,30 @@
+version: '2.3'
+volumes:
+  volume_byodr_sessions:
+
+services:
+  yolo-export:
+    build:
+      context: .
+      dockerfile: export_following/Dockerfile
+    restart: always
+    privileged: true
+    network_mode: host
+    stop_signal: SIGKILL
+    environment:
+      - LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/tegra:$LD_LIBRARY_PATH
+    volumes:
+      - volume_byodr_sessions:/home/ftpuser:rw
+  ftpd:
+    cpuset: '0'
+    build:
+      context: .
+      dockerfile: ftpd/Dockerfile
+    restart: always
+    command: ['python3', 'wrap.py']
+    stop_signal: SIGKILL
+    ports:
+      - '21:21'
+      - '30000-30009:30000-30009'
+    volumes:
+      - volume_byodr_sessions:/home/ftpuser:rw

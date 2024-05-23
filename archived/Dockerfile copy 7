@@ -1,0 +1,44 @@
+#doesn't have tensorRt
+# Base image containing Torch 1.11 with CUDA 10.2 support
+FROM mwlvdev/jetson-nano-ubuntu:bionic-torch1.11-cp38-cuda10.2
+
+# Install linux packages
+# g++ required to build 'tflite_support' and 'lap' packages
+# libusb-1.0-0 required for 'tflite_support' package when exporting to TFLite
+# pkg-config and libhdf5-dev (not included) are needed to build 'h5py==3.11.0' aarch64 wheel required by 'tensorflow'
+RUN apt update \
+    && apt install --no-install-recommends -y gcc git zip curl htop libgl1 libglib2.0-0 libpython3-dev gnupg g++ libusb-1.0-0
+
+# Create working directory
+WORKDIR /usr/src/ultralytics
+
+# Copy contents
+# COPY . /usr/src/ultralytics  # git permission issues inside container
+RUN git clone https://github.com/ultralytics/ultralytics -b main /usr/src/ultralytics
+
+# Remove opencv-python from Ultralytics dependencies as it conflicts with opencv-python installed in base image
+RUN grep -v "opencv-python" pyproject.toml > temp.toml && mv temp.toml pyproject.toml
+
+# Download onnxruntime-gpu 1.15.1 for Jetson Linux 35.2.1 (JetPack 5.1). Other versions can be seen in https://elinux.org/Jetson_Zoo#ONNX_Runtime
+RUN wget https://nvidia.box.com/shared/static/gjqofg7rkg97z3gc8jeyup6t8n9j8xjw.whl -O onnxruntime_gpu-1.8.0-cp38-cp38-linux_aarch64.whl
+
+# Install pip packages manually for TensorRT compatibility https://github.com/NVIDIA/TensorRT/issues/2567
+RUN python3 -m pip install --upgrade pip wheel
+RUN pip install onnxruntime_gpu-1.8.0-cp38-cp38-linux_aarch64.whl
+RUN pip install --no-cache tqdm matplotlib pyyaml psutil pandas onnx
+RUN pip install --no-cache -e ".[export]"
+
+# Set environment variables
+ENV OMP_NUM_THREADS=1
+
+# Copy application code to the working directory
+COPY /export_following/ /app/
+
+# Set the working directory to /app
+WORKDIR /app/
+
+# Command that runs when the container starts
+# CMD ["python3", "app.py"]
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]
+

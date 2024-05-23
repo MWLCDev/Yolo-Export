@@ -1,0 +1,71 @@
+#has tensorRt
+#with yolo: it would download onnx and then show error "onnxruntime.capi.onnxruntime_pybind11_state.Fail: [ONNXRuntimeError] : 1 : FAIL : Load model from yolov8n.onnx failed:/home/onnxruntime/onnxruntime-py38/onnxruntime/core/graph/model.cc:111 onnxruntime::Model::Model(onnx::ModelProto&&, const PathString&, const IOnnxRuntimeOpSchemaRegistryList*, const onnxruntime::logging::Logger&) Unknown model file format version."
+# Base image containing Torch 1.11 with CUDA 10.2 support
+FROM mwlvdev/jetson-nano-ubuntu:bionic-torch1.11-cp38-cuda10.2
+
+# Set noninteractive mode for apt-get
+ENV DEBIAN_FRONTEND noninteractive
+
+# Setup environment variables for CUDA
+ENV PATH="/usr/local/cuda/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:/usr/local/cuda/targets/aarch64-linux/lib:/usr/lib/aarch64-linux-gnu:/usr/lib/aarch64-linux-gnu/tegra:/usr/local/cuda/extras/CUPTI/lib64"
+
+# Update and install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  cuda-toolkit-10-2 \
+  libcudnn8 \
+  lbzip2 \
+  xorg \
+  wget \
+  tar \
+  python3 \
+  libegl1 \
+  python3-pip \
+  locales \
+  nano \
+  sudo \
+  python-pip\
+  protobuf-compiler\
+  libprotoc-dev
+
+# Set the locale
+RUN locale-gen en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+ENV LANG en_US.UTF-8
+
+# Add NVIDIA repository for TensorRT
+RUN echo "deb https://repo.download.nvidia.com/jetson/common r32.7 main" > /etc/apt/sources.list.d/nvidia-l4t-apt-source.list && \
+  apt-get update
+
+# Install TensorRT and other libraries
+RUN apt-get install -y --no-install-recommends \
+  libnvinfer-dev=8.2.1-1+cuda10.2 \
+  libnvinfer-plugin-dev=8.2.1-1+cuda10.2 \
+  libopencv-python && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# Install runtime libraries matching the development versions
+RUN apt-get update && \
+  apt-get install -y libnvinfer8 libnvinfer-plugin8
+
+# Download and install the ONNX Runtime GPU wheel
+RUN wget -O onnxruntime_gpu-1.8.0-cp38-cp38-linux_aarch64.whl "https://nvidia.box.com/shared/static/gjqofg7rkg97z3gc8jeyup6t8n9j8xjw.whl" && \
+  pip install onnxruntime_gpu-1.8.0-cp38-cp38-linux_aarch64.whl && \
+  rm onnxruntime_gpu-1.8.0-cp38-cp38-linux_aarch64.whl
+
+# Cleanup and final setup
+RUN apt-get clean && \
+  rm -rf /var/lib/apt/lists/* && \
+  rm -rf /usr/local/cuda-10.2/doc
+
+WORKDIR /app
+
+# Copy application code to the working directory
+COPY /export_following/ /app/
+
+# Set the working directory to /app
+WORKDIR /app/
+
+# Command that runs when the container starts
+# CMD ["python3", "app.py"]
+ENTRYPOINT ["tail", "-f", "/dev/null"]

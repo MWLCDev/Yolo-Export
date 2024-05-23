@@ -1,0 +1,68 @@
+#doesn't have tensorRt but have onnx
+# Base image containing Torch 1.11 with CUDA 10.2 support
+FROM mwlvdev/jetson-nano-ubuntu:bionic-torch1.11-cp38-cuda10.2
+
+# Downloads to user config dir
+RUN mkdir -p /root/.config/Ultralytics && \
+  wget https://github.com/ultralytics/assets/releases/download/v0.0.0/Arial.ttf -O /root/.config/Ultralytics/Arial.ttf && \
+  wget https://github.com/ultralytics/assets/releases/download/v0.0.0/Arial.Unicode.ttf -O /root/.config/Ultralytics/Arial.Unicode.ttf
+
+# Install linux packages
+# g++ required to build 'tflite_support' and 'lap' packages
+# libusb-1.0-0 required for 'tflite_support' package when exporting to TFLite
+# pkg-config and libhdf5-dev (not included) are needed to build 'h5py==3.11.0' aarch64 wheel required by 'tensorflow'
+RUN apt update \
+  && apt install --no-install-recommends -y gcc git zip curl htop libgl1 libglib2.0-0 libpython3-dev gnupg g++ libusb-1.0-0
+
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1A127079A92F09ED
+
+# Create working directory
+WORKDIR /usr/src/ultralytics
+
+# Copy contents
+# COPY . /usr/src/ultralytics  # git permission issues inside container
+RUN git clone https://github.com/ultralytics/ultralytics -b main /usr/src/ultralytics
+
+# Remove opencv-python from Ultralytics dependencies as it conflicts with opencv-python installed in base image
+RUN grep -v "opencv-python" pyproject.toml > temp.toml && mv temp.toml pyproject.toml
+
+
+# Add NVIDIA repository for TensorRT
+RUN echo "deb https://repo.download.nvidia.com/jetson/common r32.7 main" > /etc/apt/sources.list.d/nvidia-l4t-apt-source.list && \
+  apt-get update
+
+
+# Install TensorRT and other libraries
+RUN apt-get install -y --no-install-recommends \
+  libnvinfer-dev=8.2.1-1+cuda10.2 \
+  libnvinfer-plugin-dev=8.2.1-1+cuda10.2 \
+  libopencv-python && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# Install runtime libraries matching the development versions
+RUN apt-get update && \
+  apt-get install -y libnvinfer8 libnvinfer-plugin8
+
+# Download and install the ONNX Runtime GPU wheel
+RUN wget -O onnxruntime_gpu-1.8.0-cp38-cp38-linux_aarch64.whl "https://nvidia.box.com/shared/static/gjqofg7rkg97z3gc8jeyup6t8n9j8xjw.whl" && \
+  pip install onnxruntime_gpu-1.8.0-cp38-cp38-linux_aarch64.whl && \
+  rm onnxruntime_gpu-1.8.0-cp38-cp38-linux_aarch64.whl
+
+
+# Install pip packages manually for TensorRT compatibility https://github.com/NVIDIA/TensorRT/issues/2567
+RUN python3 -m pip install --upgrade pip wheel
+RUN pip install --no-cache tqdm matplotlib pyyaml psutil pandas onnx
+RUN pip install --no-cache -e ".[export]"
+
+# Set environment variables
+ENV OMP_NUM_THREADS=1
+
+# Copy application code to the working directory
+COPY /export_following/ /app/
+
+# Set the working directory to /app
+WORKDIR /app/
+
+# Command that runs when the container starts
+CMD ["python3", "app.py"]
