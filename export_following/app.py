@@ -121,7 +121,7 @@ class ModelTester:
         if not os.path.exists(self.engine_model_path):
             pt_model = YOLO(self.pt_model_path)
             # (you might want to change imgsz parameter here)
-            pt_model.export(format="engine", device="cuda", int8=True, imgsz=480)
+            pt_model.export(format="engine", device="cuda", int8=True, imgsz=640)
 
             default_engine_path = f"{self.model_name}.engine"
             if os.path.exists(default_engine_path):
@@ -156,7 +156,7 @@ class ModelTester:
 
 
 if __name__ == "__main__":
-    model_name = "480_20k"
+    model_name = "yolov8n"
     image_url = "https://ultralytics.com/images/bus.jpg"
     tester = ModelTester(model_name, image_url)
 
