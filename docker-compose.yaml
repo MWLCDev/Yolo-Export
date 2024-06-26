@@ -1,9 +1,9 @@
-version: '2.3'
+version: '2'
 volumes:
   volume_byodr_sessions:
-
 services:
   yolo-export:
+    cpuset: '0'
     build:
       context: .
       dockerfile: following_utils/Dockerfile
@@ -15,6 +15,7 @@ services:
       - LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/tegra:$LD_LIBRARY_PATH
     volumes:
       - volume_byodr_sessions:/home/ftpuser:rw
+
   ftpd:
     cpuset: '0'
     build:
