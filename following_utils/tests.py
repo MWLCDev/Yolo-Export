@@ -51,9 +51,7 @@ class ModelTester:
     def run_tests(self):
         for model_name in self.model_names:
             pt_model = YOLO(self.models_paths[model_name])
-
             print(f"\nRunning tests for {model_name}...")
-
             pt_performance = self.measure_inference_time(pt_model, self.image_resized)
             self.results[model_name] = pt_performance
 
