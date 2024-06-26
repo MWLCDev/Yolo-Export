@@ -48,12 +48,12 @@ class ModelTester:
             subprocess.run(["wget", image_url, "-O", local_path])
         return local_path
 
-    def preprocess_image(image_path, size):
+    def preprocess_image(self, image_path, size):
         image = cv2.imread(image_path)
         image_resized = cv2.resize(image, size)
         return image_resized
 
-    def measure_inference_time(model, image, iterations=300):
+    def measure_inference_time(self, model, image, iterations=300):
         inference_times = []
 
         for _ in range(iterations):
@@ -74,7 +74,7 @@ class ModelTester:
     def export_model(self, model_name):
         pt_model_path = self.models_paths[model_name]["pt"]
         engine_model_path = self.models_paths[model_name]["engine"]
-        
+
         if not os.path.exists(engine_model_path):
             pt_model = YOLO(pt_model_path)
             # (you might want to change imgsz parameter here)

@@ -9,18 +9,7 @@ logger = logging.getLogger(__name__)
 
 log_format = "%(levelname)s: %(asctime)s %(filename)s %(funcName)s %(message)s"
 
-_MAIN_COMMAND = [
-    "/usr/sbin/pure-ftpd",
-    "-P",
-    "localhost",
-    "-p",
-    "30000:30009",
-    "-l",
-    "puredb:/etc/pureftpd/pureftpd.pdb",
-    "-E",
-    "-j",
-    "-R",
-]
+_MAIN_COMMAND = ["/usr/sbin/pure-ftpd", "-P", "localhost", "-p", "30000:30009", "-l", "puredb:/etc/pureftpd/pureftpd.pdb", "-E", "-j", "-R"]
 
 
 def main():
