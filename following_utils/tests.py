@@ -19,29 +19,23 @@ warnings.filterwarnings("ignore", category=UserWarning)
 class ModelTester:
     def __init__(self, model_names, image_filename, fixed_size=(640, 480)):
         self.model_names = model_names
-        self.models_paths = {name: f"{name}.pt" for name in model_names}
+        self.models_paths = {name: f"{name}.engine" for name in model_names}
         self.image_path = os.path.join(os.path.dirname(__file__), image_filename)
         self.fixed_size = fixed_size
         self.image_resized = self.preprocess_image(self.image_path, fixed_size)
         self.results = {}
 
-    def check_cuda():
-        if torch.cuda.is_available():
-            print(f"CUDA is available. CUDA version: {torch.version.cuda}")
-        else:
-            print("CUDA is not available.")
-
-    def preprocess_image(image_path, size):
+    def preprocess_image(self, image_path, size):
         image = cv2.imread(image_path)
-        image_resized = cv2.resize(image, size)
+        image_resized = cv2.resize(image, dsize=size)
         return image_resized
 
-    def measure_inference_time(model, image, iterations=300):
+    def measure_inference_time(self, model, image, iterations=300):
         inference_times = []
 
         for _ in range(iterations):
             start_time = time.time()
-            model(image, imgsz=640, task="detect", verbose=True)
+            model(image, imgsz=(self.fixed_size[1], self.fixed_size[0]), task="detect", verbose=True)
             end_time = time.time()
             inference_times.append(end_time - start_time)
 
@@ -65,7 +59,7 @@ class ModelTester:
 
     def display_results(self):
         for model_name, performance in self.results.items():
-            print(f"\nPerformance for {model_name} .pt model:")
+            print(f"\nPerformance for {model_name}.engine model:")
             print(f"Total Inference Time for 300 images: {performance['total_time']:.2f} seconds")
             print(f"Average Inference Time: {performance['average_time']:.2f} seconds")
             print(f"Max Inference Time: {performance['max_time']:.2f} seconds")
@@ -75,11 +69,10 @@ class ModelTester:
 
 
 if __name__ == "__main__":
-    model_names = ["yolov8n", "yolov10n"]
-    image_filename = "bus.jpg"  # Assuming the image is in the same directory as the script
+    model_names = ["yolov8n", "yolov8n_blank", "yolov8n_blank(imgsz480x640)"]
+    image_filename = "bus.jpg"
     tester = ModelTester(model_names, image_filename)
 
-    tester.check_cuda()
     tester.run_tests()
     tester.display_results()
 
