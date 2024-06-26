@@ -19,7 +19,6 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 class ModelTester:
     def __init__(self, model_name):
-
         self.model_name = model_name
         self.pt_model_path = f"{model_name}.pt"
         self.engine_model_path = f"/home/ftpuser/{model_name}.engine"
@@ -40,7 +39,6 @@ class ModelTester:
             print("CUDA is not available.")
 
     def export_model(self):
-
         if not os.path.exists(self.engine_model_path):
             pt_model = YOLO(self.pt_model_path)
             # (you might want to change imgsz parameter here)

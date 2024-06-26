@@ -6,7 +6,7 @@ services:
   yolo-export:
     build:
       context: .
-      dockerfile: export_following/Dockerfile
+      dockerfile: following_utils/Dockerfile
     restart: always
     privileged: true
     network_mode: host

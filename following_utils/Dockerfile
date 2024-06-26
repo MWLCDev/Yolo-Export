@@ -6,7 +6,7 @@ RUN /bin/bash -c "source /venv/bin/activate && pip install --no-cache --upgrade 
 RUN /bin/bash -c "source /venv/bin/activate && pip install --upgrade ultralytics"
 
 # Copy application code to the working directory
-COPY /export_following/ /app/
+COPY /following_utils/ /app/
 
 # Set the working directory to /app
 WORKDIR /app/
