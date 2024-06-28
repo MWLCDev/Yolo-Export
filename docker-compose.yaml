@@ -1,4 +1,4 @@
-version: '2'
+version: '2.4' # The highest supported version on balena IOT
 volumes:
   volume_byodr_sessions:
 services:
@@ -15,7 +15,6 @@ services:
       - LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/tegra:$LD_LIBRARY_PATH
     volumes:
       - volume_byodr_sessions:/home/ftpuser:rw
-
   ftpd:
     cpuset: '0'
     build:
