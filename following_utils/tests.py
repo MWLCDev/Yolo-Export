@@ -6,18 +6,19 @@ import time
 import warnings
 
 import cv2
-import torch
 import ultralytics
 from ultralytics import YOLO
+import tensorrt as trt
 
 ultralytics.checks()
 
 # Suppress specific warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+print(trt.__version__)
 
 
 class ModelTester:
-    def __init__(self, model_names, image_filename, iterations=300, fixed_size=(640, 480)):
+    def __init__(self, model_names, image_filename, iterations=200, fixed_size=(640, 480)):
         self.model_names = model_names
         self.fixed_size = fixed_size
         self.iterations = iterations
